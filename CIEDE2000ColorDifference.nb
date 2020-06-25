@@ -1,0 +1,3195 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[    143352,       3187]
+NotebookOptionsPosition[    140103,       3125]
+NotebookOutlinePosition[    140508,       3141]
+CellTagsIndexPosition[    140465,       3138]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["CIEDE2000 Color Difference", "Title",
+ CellChangeTimes->{{3.8020300662172003`*^9, 
+  3.8020300715417557`*^9}},ExpressionUUID->"e50129c5-2fcb-4281-9487-\
+2278eb564662"],
+
+Cell[TextData[{
+ "Implementation of the ",
+ ButtonBox["CIEDE2000 color-difference formula",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["http://www2.ece.rochester.edu/~gsharma/ciede2000/ciede2000noteCRNA.\
+pdf"], None},
+  ButtonNote->
+   "http://www2.ece.rochester.edu/~gsharma/ciede2000/ciede2000noteCRNA.pdf"],
+ ". The notebook provides two implementation. One for calculating \
+\[CapitalDelta]E00 symbolicly (or infinitely precise) and a fast, compiled \
+version that works with machine precision numbers. The function for symbolic \
+calculation returns a map of additional subresults that can be used to verify \
+its correctness. The implementations are given at the very end of this \
+notebook, and if you haven\[CloseCurlyQuote]t evaluated the initialization \
+cells, then you need to evaluate the Implementation section first. The \
+notebook was tested on Mathematica 12.1."
+}], "Text",
+ CellChangeTimes->{{3.802030080834805*^9, 3.802030146405857*^9}, {
+  3.802030472960339*^9, 3.802030541562641*^9}, {3.802030588960362*^9, 
+  3.802030598441592*^9}, {3.802030673502594*^9, 3.802030744066226*^9}, {
+  3.802031042139062*^9, 3.80203108664857*^9}, {3.8020311205710487`*^9, 
+  3.8020311341849422`*^9}},ExpressionUUID->"7a6beb32-0b4f-4c74-93f7-\
+07058cbaac2a"],
+
+Cell[TextData[{
+ "To gain more insight, you can use ",
+ Cell[BoxData[
+  FormBox["\[CapitalDelta]E00Symbolic", TraditionalForm]],
+  FormatType->"TraditionalForm",ExpressionUUID->
+  "f8a74678-2e84-4ca8-9512-9ccccee24c12"],
+ " and insert two Lab tripples. "
+}], "Text",
+ CellChangeTimes->{{3.8020322982708397`*^9, 
+  3.802032326675844*^9}},ExpressionUUID->"74615274-5679-4572-a094-\
+7be1bdb34075"],
+
+Cell[BoxData[
+ RowBox[{"\[CapitalDelta]E00Symbolic", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"50", ",", "2", ",", "80"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"50", ",", "3", ",", "80"}], "}"}]}], "]"}]], "Input",ExpressionUU\
+ID->"3fe7c262-4a82-4a9e-b49b-0b5efd1da617"],
+
+Cell[TextData[{
+ "This will give a long output since all calculations are done exactly. A \
+more insightful way is to calculate everything exactly and convert it to \
+machine precision afterwards. This can be done with ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"N", "[", "...", "]"}], TraditionalForm]],
+  FormatType->"TraditionalForm",ExpressionUUID->
+  "142db692-01a9-4faf-9c99-62c77efbd59c"],
+ " or using something like below. It gives some of the debug values as they \
+are available in the test Excel-sheet that can be ",
+ ButtonBox["downloaded here",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["http://www2.ece.rochester.edu/~gsharma/ciede2000/"], None},
+  ButtonNote->"http://www2.ece.rochester.edu/~gsharma/ciede2000/"],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.80203233594005*^9, 3.802032424656852*^9}, {
+  3.8020324573871193`*^9, 3.802032477666026*^9}, {3.8020325746067944`*^9, 
+  3.802032608692069*^9}},ExpressionUUID->"37f9d4da-58f7-4da1-a3d3-\
+deb7bdafa6c0"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Dataset", "[", 
+  RowBox[{"\[CapitalDelta]E00Symbolic", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"50", ",", "2", ",", "80"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"50", ",", "3", ",", "80"}], "}"}]}], "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.8020319518973427`*^9, 3.802031995377452*^9}, {
+  3.80203205483506*^9, 3.8020320691357613`*^9}, {3.8020326177770643`*^9, 
+  3.8020326209929333`*^9}},
+ CellLabel->"In[94]:=",ExpressionUUID->"17c2e192-cfb2-48fa-92e5-4e33421fecea"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[
+   DynamicModuleBox[{TypeSystem`NestedGrid`PackagePrivate`$state$$ = 
+    Association[
+    "InitialData" -> 
+     Association[
+      "G" -> Rational[1, 2] (1 + 
+         Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+           Rational[7, 2] (
+            2 (6103515625 + 
+             Rational[
+               1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+           Rational[-1, 2]), 
+       "C1'" -> (6400 + 
+         4 (1 + Rational[1, 2] (1 + 
+              Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                Rational[7, 2] (
+                 2 (6103515625 + 
+                  Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                Rational[-1, 2]))^2)^Rational[1, 2], 
+       "C2'" -> (6400 + 
+         9 (1 + Rational[1, 2] (1 + 
+              Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                Rational[7, 2] (
+                 2 (6103515625 + 
+                  Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                Rational[-1, 2]))^2)^Rational[1, 2], "h1'" -> 
+       180 Pi^(-1) 
+        ArcTan[40/(1 + 
+          Rational[1, 2] (1 + 
+            Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+              Rational[7, 2] (
+               2 (6103515625 + 
+                Rational[
+                  1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+              Rational[-1, 2]))], "h2'" -> 
+       180 Pi^(-1) 
+        ArcTan[Rational[80, 3]/(1 + 
+          Rational[1, 2] (1 + 
+            Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+              Rational[7, 2] (
+               2 (6103515625 + 
+                Rational[
+                  1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+              Rational[-1, 2]))], "dh'" -> 
+       180 Pi^(-1) (
+         ArcTan[Rational[80, 3]/(1 + 
+           Rational[1, 2] (1 + 
+             Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+               Rational[7, 2] (
+                2 (6103515625 + 
+                 Rational[
+                   1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+               Rational[-1, 2]))] - ArcTan[
+         40/(1 + Rational[1, 2] (1 + 
+            Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+              Rational[7, 2] (
+               2 (6103515625 + 
+                Rational[
+                  1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+              Rational[-1, 2]))]), "dL'" -> 0, 
+       "dC'" -> -(6400 + 
+           4 (1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))^2)^Rational[1, 2] + (6400 + 
+          9 (1 + Rational[1, 2] (1 + 
+               Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                 Rational[7, 2] (
+                  2 (6103515625 + 
+                   Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                 Rational[-1, 2]))^2)^Rational[1, 2], "dH'" -> 
+       360 ((6400 + 
+           4 (1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))^2) (6400 + 
+           9 (1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))^2))^Rational[1, 4] Pi^(-1) 
+        Sin[Rational[1, 2] (
+           ArcTan[Rational[80, 3]/(1 + 
+             Rational[1, 2] (1 + 
+               Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                 Rational[7, 2] (
+                  2 (6103515625 + 
+                   Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                 Rational[-1, 2]))] - ArcTan[
+           40/(1 + Rational[1, 2] (1 + 
+              Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                Rational[7, 2] (
+                 2 (6103515625 + 
+                  Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                Rational[-1, 2]))])], "L'_ave" -> 50, "C'_ave" -> 
+       Rational[
+         1, 2] ((6400 + 
+           4 (1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))^2)^
+          Rational[1, 2] + (6400 + 
+           9 (1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))^2)^Rational[1, 2]), "h'_ave" -> 
+       90 Pi^(-1) (
+         ArcTan[
+          Rational[80, 3]/(1 + 
+           Rational[1, 2] (1 + 
+             Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+               Rational[7, 2] (
+                2 (6103515625 + 
+                 Rational[
+                   1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+               Rational[-1, 2]))] + 
+         ArcTan[40/(1 + 
+           Rational[1, 2] (1 + 
+             Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+               Rational[7, 2] (
+                2 (6103515625 + 
+                 Rational[
+                   1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+               Rational[-1, 2]))]), "S_L" -> 1, "S_C" -> 
+       1 + Rational[
+          9, 400] ((6400 + 
+            4 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^
+           Rational[1, 2] + (6400 + 
+            9 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^Rational[1, 2]), "T" -> 
+       1 + Rational[-17, 100] 
+         Cos[Rational[1, 6] Pi + 
+           Rational[
+             1, 2] (-ArcTan[
+               Rational[80, 3]/(1 + 
+                Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] - ArcTan[
+             40/(1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))])] + 
+        Rational[6, 25] 
+         Cos[ArcTan[
+            Rational[80, 3]/(1 + 
+             Rational[1, 2] (1 + 
+               Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                 Rational[7, 2] (
+                  2 (6103515625 + 
+                   Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                 Rational[-1, 2]))] + 
+           ArcTan[40/(1 + 
+             Rational[1, 2] (1 + 
+               Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                 Rational[7, 2] (
+                  2 (6103515625 + 
+                   Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                 Rational[-1, 2]))]] + 
+        Rational[8, 25] 
+         Cos[Rational[1, 30] Pi + 
+           Rational[3, 2] (
+             ArcTan[Rational[80, 3]/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))] + 
+             ArcTan[40/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))])] + 
+        Rational[-1, 5] 
+         Sin[Rational[3, 20] Pi + 
+           2 (ArcTan[
+              Rational[80, 3]/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))] + 
+             ArcTan[40/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))])], "S_H" -> 
+       1 + Rational[
+          3, 400] ((6400 + 
+            4 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^
+           Rational[1, 2] + (6400 + 
+            9 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^Rational[1, 2]) (1 + 
+          Rational[-17, 100] 
+           Cos[Rational[1, 6] Pi + 
+             Rational[
+               1, 2] (-
+                ArcTan[Rational[80, 3]/(1 + 
+                  Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] - ArcTan[
+               40/(1 + Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])] + 
+          Rational[6, 25] 
+           Cos[ArcTan[
+              Rational[80, 3]/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))] + 
+             ArcTan[40/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))]] + 
+          Rational[8, 25] 
+           Cos[Rational[1, 30] Pi + 
+             Rational[3, 2] (
+               ArcTan[Rational[80, 3]/(1 + 
+                 Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+               ArcTan[40/(1 + 
+                 Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])] + 
+          Rational[-1, 5] 
+           Sin[Rational[3, 20] Pi + 
+             2 (ArcTan[
+                Rational[80, 3]/(1 + 
+                 Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+               ArcTan[40/(1 + 
+                 Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])]), "dTheta" -> 
+       Rational[1, 6] 
+        E^(Rational[-1, 625] (-275 + 
+            90 Pi^(-1) (
+              ArcTan[Rational[80, 3]/(1 + 
+                Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+              ArcTan[40/(1 + 
+                Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))]))^2) Pi, "R_C" -> 
+       Rational[
+         1, 4] ((6400 + 
+            4 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^
+           Rational[1, 2] + (6400 + 
+            9 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^Rational[1, 2])^
+         Rational[7, 2] (
+          2 (6103515625 + 
+           Rational[
+             1, 128] ((6400 + 
+                4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+               Rational[1, 2] + (6400 + 
+                9 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2])^7))^Rational[-1, 2], 
+       "R_T" -> Rational[-1, 
+          4] ((6400 + 
+            4 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^
+           Rational[1, 2] + (6400 + 
+            9 (1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))^2)^Rational[1, 2])^
+         Rational[7, 2] (
+          2 (6103515625 + 
+           Rational[
+             1, 128] ((6400 + 
+                4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+               Rational[1, 2] + (6400 + 
+                9 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2])^7))^Rational[-1, 2] 
+        Sin[Rational[1, 3] 
+          E^(Rational[-1, 625] (-275 + 
+              90 Pi^(-1) (
+                ArcTan[Rational[80, 3]/(1 + 
+                  Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+                ArcTan[40/(1 + 
+                  Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))]))^2) Pi], 
+       "dE2000" -> ((-(6400 + 
+               4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2] + (6400 + 
+              9 (1 + Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2])^2 (1 + 
+            Rational[
+              9, 400] ((6400 + 
+                4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+               Rational[1, 2] + (6400 + 
+                9 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2]))^(-2) + 
+         4 ((6400 + 
+             4 (1 + Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2) (6400 + 
+             9 (1 + Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2))^Rational[1, 2] 
+          Sin[Rational[1, 2] (
+              ArcTan[Rational[80, 3]/(1 + 
+                Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] - ArcTan[
+              40/(1 + Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))])]^2 (1 + 
+            Rational[
+              3, 400] ((6400 + 
+                4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+               Rational[1, 2] + (6400 + 
+                9 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2]) (1 + 
+              Rational[-17, 100] 
+               Cos[Rational[1, 6] Pi + 
+                 Rational[
+                   1, 2] (-
+                    ArcTan[Rational[80, 3]/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))] - ArcTan[
+                   40/(1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])] + 
+              Rational[6, 25] 
+               Cos[ArcTan[
+                  Rational[80, 3]/(1 + 
+                   Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+                 ArcTan[40/(1 + 
+                   Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))]] + 
+              Rational[8, 25] 
+               Cos[Rational[1, 30] Pi + 
+                 Rational[3, 2] (
+                   ArcTan[Rational[80, 3]/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))] + 
+                   ArcTan[40/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))])] + 
+              Rational[-1, 5] 
+               Sin[Rational[3, 20] Pi + 
+                 2 (ArcTan[
+                    Rational[80, 3]/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))] + 
+                   ArcTan[40/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))])]))^(-2) + 
+         Rational[-1, 
+            2] ((6400 + 
+             4 (1 + Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2) (6400 + 
+             9 (1 + Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2))^
+           Rational[
+            1, 4] (-(6400 + 
+              4 (1 + Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2] + (6400 + 
+             9 (1 + Rational[1, 2] (1 + 
+                  Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+            Rational[
+             1, 2]) ((6400 + 
+              4 (1 + Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+             Rational[1, 2] + (6400 + 
+              9 (1 + Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2])^
+           Rational[7, 2] (1 + 
+            Rational[
+              9, 400] ((6400 + 
+                4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+               Rational[1, 2] + (6400 + 
+                9 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2]))^(-1) (
+            2 (6103515625 + 
+             Rational[
+               1, 128] ((6400 + 
+                  4 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))^2)^
+                 Rational[1, 2] + (6400 + 
+                  9 (1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[1, 128] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^7))^Rational[-1, 2]))^2)^
+                 Rational[1, 2])^7))^Rational[-1, 2] 
+          Sin[Rational[1, 3] 
+            E^(Rational[-1, 625] (-275 + 
+                90 Pi^(-1) (
+                  ArcTan[Rational[80, 3]/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+                  ArcTan[40/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))]))^2) Pi] 
+          Sin[Rational[1, 2] (
+             ArcTan[Rational[80, 3]/(1 + 
+               Rational[1, 2] (1 + 
+                 Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                   Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                   Rational[-1, 2]))] - ArcTan[
+             40/(1 + Rational[1, 2] (1 + 
+                Rational[-1, 8] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^
+                  Rational[7, 2] (
+                   2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                  Rational[-1, 2]))])]/(1 + 
+          Rational[
+            3, 400] ((6400 + 
+              4 (1 + Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^
+             Rational[1, 2] + (6400 + 
+              9 (1 + Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))^2)^Rational[1, 2]) (1 + 
+            Rational[-17, 100] 
+             Cos[Rational[1, 6] Pi + 
+               Rational[
+                 1, 2] (-
+                  ArcTan[Rational[80, 3]/(1 + 
+                    Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] - ArcTan[
+                 40/(1 + Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])] + 
+            Rational[6, 25] 
+             Cos[ArcTan[
+                Rational[80, 3]/(1 + 
+                 Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+               ArcTan[40/(1 + 
+                 Rational[1, 2] (1 + 
+                   Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))]] + 
+            Rational[8, 25] 
+             Cos[Rational[1, 30] Pi + 
+               Rational[3, 2] (
+                 ArcTan[Rational[80, 3]/(1 + 
+                   Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+                 ArcTan[40/(1 + 
+                   Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])] + 
+            Rational[-1, 5] 
+             Sin[Rational[3, 20] Pi + 
+               2 (ArcTan[
+                  Rational[80, 3]/(1 + 
+                   Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))] + 
+                 ArcTan[40/(1 + 
+                   Rational[1, 2] (1 + 
+                    Rational[-1, 8] (2 1601^Rational[1, 2] + 
+                    6409^Rational[1, 2])^
+                    Rational[7, 2] (
+                    2 (6103515625 + 
+                    Rational[
+                    1, 128] (2 1601^Rational[1, 2] + 6409^Rational[1, 2])^7))^
+                    Rational[-1, 2]))])])))^Rational[1, 2]], "InitialShape" -> 
+     TypeSystem`PackageScope`Limited[
+       TypeSystem`PackageScope`ColumnShape[
+        TypeSystem`PackageScope`KeyValueShape[
+         TypeSystem`PackageScope`AtomShape[57.60000000000001], 
+         TypeSystem`PackageScope`AtomShape[60]]], 20, 
+       DirectedInfinity[1], {}], "InitialType" -> TypeSystem`Assoc[
+       TypeSystem`Atom[String], 
+       TypeSystem`Atom[Real], 20], "Meta" -> 
+     Association["ID" -> 256229363461389], "RowTarget" -> 20, "ColumnTarget" -> 
+     10, "Shape" -> TypeSystem`PackageScope`Limited[
+       TypeSystem`PackageScope`ColumnShape[
+        TypeSystem`PackageScope`KeyValueShape[
+         TypeSystem`PackageScope`AtomShape[57.60000000000001], 
+         TypeSystem`PackageScope`AtomShape[60]]], 20, 
+       DirectedInfinity[1], {}], "Type" -> TypeSystem`Assoc[
+       TypeSystem`Atom[String], 
+       TypeSystem`Atom[Real], 20], "Path" -> {}, "BaseIndices" -> {}, 
+     "DisplayedRowCount" -> 20, "DisplayedColumnCount" -> 1, "DataRowCount" -> 
+     20, "DataColumnCount" -> 1, "SortPaths" -> {}, "SortDirections" -> {}, 
+     "HiddenItemsMap" -> Null, "UpdateType" -> 1], 
+    TypeSystem`NestedGrid`PackagePrivate`$outputID$$, 
+    TypeSystem`NestedGrid`PackagePrivate`$path$$ = {}, 
+    TypeSystem`NestedGrid`PackagePrivate`$vPos$$ = 1, 
+    TypeSystem`NestedGrid`PackagePrivate`$hPos$$ = 1, 
+    TypeSystem`NestedGrid`PackagePrivate`$grid$$ = 
+    DynamicModule[{
+     TypeSystem`NestedGrid`PackagePrivate`renderedGrid = Deploy[
+        Style[
+         Grid[{{
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["G", 
+                  Style[
+                  "G", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["G"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["G"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["0.0000724858"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["G"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["C1'", 
+                  Style[
+                  "C1'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["C1'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["C1'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["80.025"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["C1'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["C2'", 
+                  Style[
+                  "C2'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["C2'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["C2'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["80.0562"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["C2'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["h1'", 
+                  Style[
+                  "h1'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["h1'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["h1'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["88.5678"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["h1'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["h2'", 
+                  Style[
+                  "h2'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["h2'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["h2'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["87.8523"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["h2'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["dh'", 
+                  Style[
+                  "dh'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["dh'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dh'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["-0.715541"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dh'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["dL'", 
+                  Style[
+                  "dL'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["dL'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dL'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["0"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dL'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["dC'", 
+                  Style[
+                  "dC'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["dC'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dC'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["0.0312387"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dC'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["dH'", 
+                  Style[
+                  "dH'", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["dH'"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dH'"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["-57.272"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dH'"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["L'_ave", 
+                  Style[
+                  "L'_ave", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["L'_ave"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["L'_ave"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["50"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["L'_ave"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["C'_ave", 
+                  Style[
+                  "C'_ave", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["C'_ave"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["C'_ave"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["80.0406"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["C'_ave"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["h'_ave", 
+                  Style[
+                  "h'_ave", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["h'_ave"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["h'_ave"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["88.21"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["h'_ave"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["S_L", 
+                  Style[
+                  "S_L", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["S_L"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["S_L"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["1"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["S_L"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["S_C", 
+                  Style[
+                  "S_C", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["S_C"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["S_C"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["4.60183"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["S_C"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["T", 
+                  Style[
+                  "T", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["T"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["T"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["0.606551"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["T"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["S_H", 
+                  Style[
+                  "S_H", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["S_H"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["S_H"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["1.72823"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["S_H"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["dTheta", 
+                  Style[
+                  "dTheta", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["dTheta"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dTheta"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["0.000000000000000000000000298264"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dTheta"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["R_C", 
+                  Style[
+                  "R_C", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["R_C"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["R_C"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["1.99971"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["R_C"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["R_T", 
+                  Style[
+                  "R_T", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["R_T"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["R_T"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["-0.00000000000000000000000119288"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["R_T"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}, {
+            Item[
+             Pane[
+              Annotation[
+               EventHandler[
+                MouseAppearance[
+                 Mouseover["dE2000", 
+                  Style[
+                  "dE2000", FontColor -> 
+                   RGBColor[
+                    0.27450980392156865`, 0.5372549019607843, 
+                    0.792156862745098]]], "LinkHand"], {"MouseClicked", 1} :> 
+                TypeSystem`NestedGrid`PackagePrivate`updateState[
+                 TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                  TypeSystem`NestedGrid`PackagePrivate`localHold[
+                  TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][{
+                   Key["dE2000"]}, 1]], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dE2000"]}, "RowHeader", False], "Mouse"], 
+              ImageSize -> {{57.60000000000001, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], Background -> 
+             GrayLevel[0.95], Alignment -> {Left, Baseline}], 
+            Item[
+             Pane[
+              Annotation[
+               RawBoxes["0.578426"], 
+               TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+               "570a636e-1451-41fd-a206-59d75bd0f0f5"][{
+                 Key["dE2000"]}, "Item", False], "Mouse"], 
+              ImageSize -> {{60, Full}, Automatic}, 
+              ImageMargins -> {{5, 3}, {4, 5}}], 
+             ItemSize -> {Full, Automatic}]}}, 
+          BaseStyle -> {
+           ContextMenu -> 
+            Dynamic[TypeSystem`NestedGrid`PackagePrivate`$contextMenuTrigger; 
+              Which[TypeSystem`NestedGrid`PackagePrivate`$lastOutputID =!= 
+                TypeSystem`NestedGrid`PackagePrivate`$outputID$$, {}, 
+                TypeSystem`NestedGrid`PackagePrivate`$contextMenuTrigger === 
+                TypeSystem`NestedGrid`PackagePrivate`$lastContextMenuTrigger, 
+                TypeSystem`NestedGrid`PackagePrivate`$lastContextMenu, True, 
+                TypeSystem`NestedGrid`PackagePrivate`$lastContextMenuTrigger = 
+                 TypeSystem`NestedGrid`PackagePrivate`$contextMenuTrigger; 
+                TypeSystem`NestedGrid`PackagePrivate`$lastContextMenu = 
+                 Block[{TypeSystem`NestedGrid`PackagePrivate`$globalScrollPos = \
+{TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$hPos$$}}, 
+                   
+                   With[{TypeSystem`NestedGrid`PackagePrivate`lastPath$ = 
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, 
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ = 
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPathType, 
+                    TypeSystem`NestedGrid`PackagePrivate`isLeafHeader$ = 
+                    TypeSystem`NestedGrid`PackagePrivate`$\
+lastPathIsLeafHeader, TypeSystem`NestedGrid`PackagePrivate`headerHidden$ = And[
+                    MatchQ[TypeSystem`NestedGrid`PackagePrivate`$lastPathType, 
+                    Alternatives["RowHeader", "ColumnHeader"]], 
+                    TypeSystem`NestedGrid`PackagePrivate`headerHiddenQ[
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, 
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$]], 
+                    TypeSystem`NestedGrid`PackagePrivate`allHidden$ = 
+                    TypeSystem`NestedGrid`PackagePrivate`allHiddenQ[
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, 
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$], 
+                    TypeSystem`NestedGrid`PackagePrivate`anyHidden$ = 
+                    TypeSystem`NestedGrid`PackagePrivate`anyHiddenQ[
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, 
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$], 
+                    TypeSystem`NestedGrid`PackagePrivate`sortDirection$ = 
+                    TypeSystem`NestedGrid`PackagePrivate`columnSortDirection[
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, 
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$[
+                    "SortPaths"], 
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$[
+                    "SortDirections"]], 
+                    TypeSystem`NestedGrid`PackagePrivate`haveData$ = Not[
+                    FailureQ[
+                    TypeSystem`NestedGrid`PackagePrivate`datasetInitialData[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$]]], 
+                    TypeSystem`NestedGrid`PackagePrivate`isKeyDummy$ = Not[
+                    FreeQ[
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, Keys]]}, 
+                    Join[{
+                    If[
+                    Or[
+                    Not[TypeSystem`NestedGrid`PackagePrivate`haveData$], 
+                    Not[TypeSystem`NestedGrid`PackagePrivate`anyHidden$], 
+                    TypeSystem`NestedGrid`PackagePrivate`isKeyDummy$], 
+                    Nothing, 
+                    MenuItem[
+                    StringJoin["Show ", 
+                    Which[
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ == 
+                    "Item", "", 
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ == 
+                    "RowHeader", "Row", 
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ == 
+                    "ColumnHeader", "Column", True, ""]], 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`updateHiddenItems[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`localHold[
+                    TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][
+                    TypeSystem`NestedGrid`PackagePrivate`lastPath$, 
+                    "remove"]], MenuEvaluator -> Automatic]], 
+                    If[
+                    Or[
+                    Not[TypeSystem`NestedGrid`PackagePrivate`haveData$], 
+                    TypeSystem`NestedGrid`PackagePrivate`pathEmptyQ[
+                    TypeSystem`NestedGrid`PackagePrivate`$lastPath, 
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$], 
+                    TypeSystem`NestedGrid`PackagePrivate`isKeyDummy$, 
+                    And[
+                    TypeSystem`NestedGrid`PackagePrivate`allHidden$, 
+                    TypeSystem`NestedGrid`PackagePrivate`headerHidden$]], 
+                    Nothing, 
+                    MenuItem[
+                    StringJoin["Hide ", 
+                    Which[
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ == 
+                    "Item", "", 
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ == 
+                    "RowHeader", "Row", 
+                    TypeSystem`NestedGrid`PackagePrivate`lastPathType$ == 
+                    "ColumnHeader", "Column", True, ""]], 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`updateHiddenItems[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`localHold[
+                    TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][
+                    TypeSystem`NestedGrid`PackagePrivate`lastPath$, "add"]], 
+                    MenuEvaluator -> Automatic]], Delimiter}, 
+                    If[
+                    And[TypeSystem`NestedGrid`PackagePrivate`haveData$, 
+                    MatchQ[TypeSystem`NestedGrid`PackagePrivate`lastPathType$, 
+                    Alternatives["ColumnHeader", "KeyDummy"]], 
+                    TypeSystem`NestedGrid`PackagePrivate`isLeafHeader$, 
+                    Not[TypeSystem`NestedGrid`PackagePrivate`allHidden$]], {
+                    If[
+                    TypeSystem`NestedGrid`PackagePrivate`sortDirection$ =!= 
+                    "Ascending", 
+                    MenuItem["Sort", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`updateSort[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$outputID$$][
+                    TypeSystem`NestedGrid`PackagePrivate`lastPath$, 
+                    "Ascending"]], MenuEvaluator -> Automatic], Nothing], 
+                    If[
+                    TypeSystem`NestedGrid`PackagePrivate`sortDirection$ =!= 
+                    "Descending", 
+                    MenuItem["Reverse Sort", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`updateSort[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$outputID$$][
+                    TypeSystem`NestedGrid`PackagePrivate`lastPath$, 
+                    "Descending"]], MenuEvaluator -> Automatic], Nothing], 
+                    If[
+                    TypeSystem`NestedGrid`PackagePrivate`sortDirection$ =!= 
+                    None, 
+                    MenuItem["Unsort", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`updateSort[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`$outputID$$][
+                    TypeSystem`NestedGrid`PackagePrivate`lastPath$, None]], 
+                    MenuEvaluator -> Automatic], Nothing], Delimiter}, {}], {
+                    MenuItem["Copy Position to Clipboard", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`toCurrentPosition[
+                    TypeSystem`NestedGrid`PackagePrivate`copyClip]], 
+                    MenuEvaluator -> Automatic], 
+                    MenuItem["Copy Data to Clipboard", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`toCurrentData[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`copyClip]], 
+                    MenuEvaluator -> Automatic], Delimiter, 
+                    MenuItem["Paste Position in New Cell", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`toCurrentPosition[
+                    TypeSystem`NestedGrid`PackagePrivate`cellPaste]], 
+                    MenuEvaluator -> Automatic], 
+                    MenuItem["Paste Data in New Cell", 
+                    KernelExecute[
+                    TypeSystem`NestedGrid`PackagePrivate`toCurrentData[
+                    TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+                    TypeSystem`NestedGrid`PackagePrivate`cellPaste]], 
+                    MenuEvaluator -> Automatic]}]]]]], FontFamily -> 
+            "Verdana", FontSize -> 12}, Spacings -> {0, 0}, Alignment -> Left,
+           Dividers -> All, FrameStyle -> GrayLevel[0.7490196078431373], 
+          BaseStyle -> {FontFamily -> "Verdana", FontSize -> 12}], 
+         LineBreakWithin -> False, ContextMenu -> {}, NumberMarks -> False, 
+         ShowAutoStyles -> False]], 
+      TypeSystem`NestedGrid`PackagePrivate`initialQ = True}, 
+     Dynamic[
+      TypeSystem`NestedGrid`PackagePrivate`setupViewPath[
+      TypeSystem`NestedGrid`PackagePrivate`$path$$, If[
+         Not[TypeSystem`NestedGrid`PackagePrivate`initialQ], 
+         Module[{
+          TypeSystem`NestedGrid`PackagePrivate`tmpGrid$ = $Failed, 
+           TypeSystem`NestedGrid`PackagePrivate`tmpData$ = 
+           TypeSystem`NestedGrid`PackagePrivate`datasetData[
+            TypeSystem`NestedGrid`PackagePrivate`$state$$]}, 
+          TypeSystem`NestedGrid`PackagePrivate`tmpGrid$ = If[
+             FailureQ[TypeSystem`NestedGrid`PackagePrivate`tmpData$], 
+             TypeSystem`NestedGrid`PackagePrivate`renderedGrid, 
+             TypeSystem`NestedGrid`PackagePrivate`renderGrid[
+             TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+              TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+              TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+              TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+              TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+              TypeSystem`NestedGrid`PackagePrivate`localHold[
+              TypeSystem`NestedGrid`PackagePrivate`$outputID$$]][
+             TypeSystem`NestedGrid`PackagePrivate`tmpData$]]; If[
+            Not[
+             FailureQ[TypeSystem`NestedGrid`PackagePrivate`tmpGrid$]], 
+            TypeSystem`NestedGrid`PackagePrivate`renderedGrid = 
+            TypeSystem`NestedGrid`PackagePrivate`tmpGrid$]; Null]]; 
+       TypeSystem`NestedGrid`PackagePrivate`initialQ = False; 
+       TypeSystem`NestedGrid`PackagePrivate`$vPos$$; 
+       TypeSystem`NestedGrid`PackagePrivate`$hPos$$; If[
+         FailureQ[TypeSystem`NestedGrid`PackagePrivate`renderedGrid], 
+         TypeSystem`SparseGrid[
+          TypeSystem`H["(data no longer present)"]], 
+         If[GeneralUtilities`$DebugMode, 
+          Row[{TypeSystem`NestedGrid`PackagePrivate`renderedGrid, "  ", 
+            TypeSystem`NestedGrid`PackagePrivate`formatState[
+            TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+             TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+             TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+             TypeSystem`NestedGrid`PackagePrivate`$hPos$$]}], 
+          TypeSystem`NestedGrid`PackagePrivate`renderedGrid]]], 
+      TrackedSymbols :> {
+       TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+        TypeSystem`NestedGrid`PackagePrivate`$hPos$$}], 
+     DynamicModuleValues :> {}], 
+    TypeSystem`NestedGrid`PackagePrivate`$topBar$$ = Dynamic[
+     TypeSystem`NestedGrid`PackagePrivate`makeFramedBar[
+      TypeSystem`PackageScope`SubViewPathbar[
+      TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+       TypeSystem`NestedGrid`PackagePrivate`updateState[
+       TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+        TypeSystem`NestedGrid`PackagePrivate`$path$$, 
+        TypeSystem`NestedGrid`PackagePrivate`$vPos$$, 
+        TypeSystem`NestedGrid`PackagePrivate`$hPos$$, 
+        TypeSystem`NestedGrid`PackagePrivate`$grid$$, 
+        TypeSystem`NestedGrid`PackagePrivate`localHold[
+        TypeSystem`NestedGrid`PackagePrivate`$outputID$$]]]], 
+     TrackedSymbols :> {TypeSystem`NestedGrid`PackagePrivate`$path$$}], 
+    TypeSystem`NestedGrid`PackagePrivate`$bottomBar$$ = Style[
+     Framed[
+      Dynamic[
+       Replace[
+       TypeSystem`NestedGrid`PackagePrivate`mouseAnnotation$$, {
+        TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+          TypeSystem`NestedGrid`PackagePrivate`$outputID$$][Null, 
+           Blank[]] -> "", 
+         TypeSystem`NestedGrid`PackagePrivate`$SliceMarker[
+          TypeSystem`NestedGrid`PackagePrivate`$outputID$$][
+           Pattern[TypeSystem`NestedGrid`PackagePrivate`path$, 
+            Blank[]], 
+           Pattern[TypeSystem`NestedGrid`PackagePrivate`pathType$, 
+            Blank[]], 
+           Pattern[TypeSystem`NestedGrid`PackagePrivate`isLeafHeader$, 
+            Blank[]]] :> (
+          Increment[TypeSystem`NestedGrid`PackagePrivate`$contextMenuTrigger]; 
+          TypeSystem`NestedGrid`PackagePrivate`$lastPath = 
+           TypeSystem`NestedGrid`PackagePrivate`path$; 
+          TypeSystem`NestedGrid`PackagePrivate`$lastPathType = 
+           TypeSystem`NestedGrid`PackagePrivate`pathType$; 
+          TypeSystem`NestedGrid`PackagePrivate`$lastPathIsLeafHeader = 
+           TypeSystem`NestedGrid`PackagePrivate`isLeafHeader$; 
+          TypeSystem`NestedGrid`PackagePrivate`$lastOutputID = 
+           TypeSystem`NestedGrid`PackagePrivate`$outputID$$; 
+          TypeSystem`NestedGrid`PackagePrivate`makePathTrail[
+           TypeSystem`NestedGrid`PackagePrivate`path$, 
+            TypeSystem`NestedGrid`PackagePrivate`makePathElements]), Null :> 
+         Spacer[10], Blank[] :> Spacer[10]}], 
+       TrackedSymbols :> {
+        TypeSystem`NestedGrid`PackagePrivate`mouseAnnotation$$}], FrameStyle -> 
+      None, ImageMargins -> 0, FrameMargins -> 0, Alignment -> Top, 
+      ImageSize -> {Automatic, 15}], FontSize -> 1], 
+    TypeSystem`NestedGrid`PackagePrivate`mouseAnnotation$$ = Null}, 
+    DynamicWrapperBox[
+     DynamicBox[ToBoxes[
+       Dataset`DatasetContent[
+       2, "Path" -> Hold[TypeSystem`NestedGrid`PackagePrivate`$path$$], 
+        "Grid" -> Hold[TypeSystem`NestedGrid`PackagePrivate`$grid$$], "State" -> 
+        Hold[TypeSystem`NestedGrid`PackagePrivate`$state$$], "VPos" -> 
+        Hold[TypeSystem`NestedGrid`PackagePrivate`$vPos$$], "HPos" -> 
+        Hold[TypeSystem`NestedGrid`PackagePrivate`$hPos$$], "TopBar" -> 
+        Hold[TypeSystem`NestedGrid`PackagePrivate`$topBar$$], "BottomBar" -> 
+        Hold[TypeSystem`NestedGrid`PackagePrivate`$bottomBar$$], "OutputID" -> 
+        Hold[
+          TypeSystem`NestedGrid`PackagePrivate`localHold[
+          TypeSystem`NestedGrid`PackagePrivate`$outputID$$]]], StandardForm],
+      ImageSizeCache->{306., {265.1875, 270.8125}},
+      TrackedSymbols:>{
+       TypeSystem`NestedGrid`PackagePrivate`$state$$, 
+        TypeSystem`NestedGrid`PackagePrivate`$grid$$}], 
+     TypeSystem`NestedGrid`PackagePrivate`mouseAnnotation$$ = 
+     MouseAnnotation[],
+     ImageSizeCache->{306., {265.1875, 270.8125}}],
+    BaseStyle->{LineBreakWithin -> False},
+    DynamicModuleValues:>{},
+    Initialization:>
+     Block[{$ContextPath = $ContextPath}, Needs["TypeSystem`"]; 
+      Needs["Dataset`"]; 
+      TypeSystem`NestedGrid`PackagePrivate`$outputID$$ = CreateUUID[]],
+    UnsavedVariables:>{TypeSystem`NestedGrid`PackagePrivate`$outputID$$}],
+   Deploy,
+   DefaultBaseStyle->"Deploy"],
+  Dataset`InterpretDataset[1],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{
+  3.80203199577347*^9, 3.802032060013206*^9, {3.802032613190487*^9, 
+   3.802032621424944*^9}},
+ CellLabel->"Out[94]=",ExpressionUUID->"aae2b217-4ef8-486e-9358-94f2be065b44"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Testing against all provided test-cases", "Section",
+ CellChangeTimes->{{3.802031178989649*^9, 3.802031192325253*^9}, {
+  3.8020326401105022`*^9, 
+  3.8020326404185457`*^9}},ExpressionUUID->"95e40d7b-343c-45b4-ac56-\
+ce476e35c4fa"],
+
+Cell["\<\
+We can run our functions against the test-cases that are provided in a text \
+file at the URL given below. Calculating the squared error and summing it up \
+shows that both implementations appear to be correct.\
+\>", "Text",
+ CellChangeTimes->{{3.802032982807728*^9, 
+  3.802033103730969*^9}},ExpressionUUID->"f59dfdc0-4dcf-4a64-a1ed-\
+9cd5baf8ea0f"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"data", "=", 
+   RowBox[{"Most", "@", 
+    RowBox[{"Import", "[", 
+     RowBox[{
+     "\"\<http://www2.ece.rochester.edu/~gsharma/ciede2000/dataNprograms/\
+ciede2000testdata.txt\>\"", ",", "\"\<Table\>\""}], "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"runTestCase", "[", 
+   RowBox[{"input_", ",", " ", "func_"}], "]"}], ":=", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"myResult", "=", 
+      RowBox[{"func", "@@", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"input", "[", 
+          RowBox[{"[", 
+           RowBox[{"1", ";;", "3"}], "]"}], "]"}], ",", 
+         RowBox[{"input", "[", 
+          RowBox[{"[", 
+           RowBox[{"4", ";;", "6"}], "]"}], "]"}]}], "}"}]}]}], "}"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"myResult", "-", 
+       RowBox[{"input", "[", 
+        RowBox[{"[", 
+         RowBox[{"-", "1"}], "]"}], "]"}]}], ")"}], "^", "2"}]}], 
+   "\[IndentingNewLine]", "]"}]}]}], "Input",
+ CellChangeTimes->{{3.802031210556518*^9, 3.802031263861364*^9}, {
+  3.8020315985346403`*^9, 3.802031599680818*^9}, {3.8020316314530087`*^9, 
+  3.8020316321981163`*^9}, {3.8020316677668533`*^9, 3.802031673942307*^9}},
+ CellLabel->"In[74]:=",ExpressionUUID->"beafeeb0-d321-4b7f-8888-73ed4c1b4e66"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"runTestCase", "[", 
+    RowBox[{"#", ",", "\[CapitalDelta]E00"}], "]"}], "&"}], "/@", 
+  "data"}]], "Input",
+ CellChangeTimes->{{3.8020312704827347`*^9, 3.8020312880139837`*^9}, {
+  3.802031321171034*^9, 3.8020313221487703`*^9}, {3.802031614207045*^9, 
+  3.802031617284018*^9}},
+ CellLabel->"In[79]:=",ExpressionUUID->"8f9ff261-62df-4c02-80c3-ad24fd5227ff"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "1.6256897741304594`*^-9", ",", "1.0352548693461263`*^-10", ",", 
+   "8.838461622746773`*^-11", ",", "1.288786966933905`*^-12", ",", 
+   "2.2100099873243508`*^-11", ",", "1.6815926115265724`*^-10", ",", 
+   "1.695860615145533`*^-9", ",", "1.695860615145533`*^-9", ",", 
+   "7.833645859656486`*^-10", ",", "1.3957694832883726`*^-9", ",", 
+   "7.754951886600204`*^-10", ",", "6.649966312755937`*^-10", ",", 
+   "4.702728265911321`*^-10", ",", "6.006524440881856`*^-10", ",", 
+   "8.344121643138283`*^-10", ",", "3.2055940872139636`*^-10", ",", 
+   "9.797367163084342`*^-10", ",", "5.670380804574554`*^-11", ",", 
+   "2.1593343939039992`*^-11", ",", "4.5939031790174665`*^-10", ",", 
+   "6.939731564493311`*^-10", ",", "7.358755923966139`*^-10", ",", 
+   "2.4501487509212193`*^-9", ",", "1.208376841801473`*^-9", ",", 
+   "4.005441524897392`*^-10", ",", "1.6566314570043257`*^-9", ",", 
+   "8.702430168607646`*^-10", ",", "2.2713235980639536`*^-11", ",", 
+   "1.7414171866914904`*^-9", ",", "4.874162797895593`*^-10", ",", 
+   "8.455354939055403`*^-10", ",", "2.891849788375993`*^-10", ",", 
+   "7.657331704438382`*^-10", ",", "1.0784394939768683`*^-9"}], 
+  "}"}]], "Output",
+ CellChangeTimes->{
+  3.8020312884815598`*^9, 3.8020313228166513`*^9, {3.802031601083064*^9, 
+   3.802031634429604*^9}, 3.802031675724737*^9, 3.802031733590719*^9},
+ CellLabel->"Out[79]=",ExpressionUUID->"11acc64f-f9f8-4917-8314-2df200b277d3"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Total", "[", "%", "]"}]], "Input",
+ CellChangeTimes->{{3.802031736299057*^9, 3.802031738051023*^9}},
+ CellLabel->"In[80]:=",ExpressionUUID->"900fa746-a3d5-4135-845a-ebe7b9d58dc4"],
+
+Cell[BoxData["2.6010048982224585`*^-8"], "Output",
+ CellChangeTimes->{3.8020317384490356`*^9},
+ CellLabel->"Out[80]=",ExpressionUUID->"01108f95-130d-41b4-aeb4-1bf2313c22cd"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"N", "[", 
+    RowBox[{"runTestCase", "[", 
+     RowBox[{
+      RowBox[{"Rationalize", "[", 
+       RowBox[{"#", ",", "0"}], "]"}], ",", 
+      RowBox[{"Function", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"c1", ",", "c2"}], "}"}], ",", 
+        RowBox[{
+         RowBox[{"\[CapitalDelta]E00Symbolic", "[", 
+          RowBox[{"c1", ",", "c2"}], "]"}], "[", "\"\<dE2000\>\"", "]"}]}], 
+       "]"}]}], "]"}], "]"}], "&"}], "/@", "data"}]], "Input",
+ CellChangeTimes->{{3.8020312704827347`*^9, 3.8020312880139837`*^9}, {
+  3.802031321171034*^9, 3.8020313221487703`*^9}, {3.8020314326259193`*^9, 
+  3.802031485734734*^9}, {3.802031516015298*^9, 3.802031561503715*^9}, {
+  3.8020316876007547`*^9, 3.802031720275115*^9}, {3.802031761087572*^9, 
+  3.802031761348646*^9}, {3.8020318301878357`*^9, 3.802031881890273*^9}},
+ CellLabel->"In[87]:=",ExpressionUUID->"84c88972-cf28-43ca-9373-cbfd92eb473d"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "1.6256897750973622`*^-9", ",", "1.0352548664542892`*^-10", ",", 
+   "8.838461612726724`*^-11", ",", "1.288786966933905`*^-12", ",", 
+   "2.210009987115581`*^-11", ",", "1.681592616306361`*^-10", ",", 
+   "1.695860615145533`*^-9", ",", "1.695860615145533`*^-9", ",", 
+   "7.833645860153664`*^-10", ",", "1.3957694832883726`*^-9", ",", 
+   "7.754951887589553`*^-10", ",", "6.649966313214015`*^-10", ",", 
+   "4.702728265911321`*^-10", ",", "6.006524440446503`*^-10", ",", 
+   "8.344121643138283`*^-10", ",", "3.2055940872139636`*^-10", ",", 
+   "9.797367163084342`*^-10", ",", "5.670380804574554`*^-11", ",", 
+   "2.1593343972057947`*^-11", ",", "4.5939031790174665`*^-10", ",", 
+   "6.939731564493311`*^-10", ",", "7.358755924086607`*^-10", ",", 
+   "2.4501487509212193`*^-9", ",", "1.208376841801473`*^-9", ",", 
+   "4.0054415238308535`*^-10", ",", "1.6566314566247464`*^-9", ",", 
+   "8.702430166511554`*^-10", ",", "2.271323592561162`*^-11", ",", 
+   "1.741417188248176`*^-9", ",", "4.874162796817111`*^-10", ",", 
+   "8.455354939830198`*^-10", ",", "2.891849786110413`*^-10", ",", 
+   "7.657331704499826`*^-10", ",", "1.0784394939695763`*^-9"}], 
+  "}"}]], "Output",
+ CellChangeTimes->{{3.8020314787482977`*^9, 3.802031486388075*^9}, {
+   3.802031525279901*^9, 3.802031562416149*^9}, 3.802031602125824*^9, 
+   3.802031650371904*^9, 3.8020317220328836`*^9, 3.80203176222563*^9, {
+   3.802031832196941*^9, 3.8020318825003443`*^9}},
+ CellLabel->"Out[87]=",ExpressionUUID->"9fcf0ebc-84fb-47c5-80ad-0608893edab3"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Total", "[", "%", "]"}]], "Input",
+ CellChangeTimes->{{3.8020317278221493`*^9, 3.802031729687001*^9}},
+ CellLabel->"In[88]:=",ExpressionUUID->"5527a038-0c29-4e03-b289-72a64e301627"],
+
+Cell[BoxData["2.6010048984021728`*^-8"], "Output",
+ CellChangeTimes->{3.802031730050583*^9, 3.8020317642919416`*^9, 
+  3.8020318835653677`*^9},
+ CellLabel->"Out[88]=",ExpressionUUID->"975ca451-d036-4c0c-ad9a-03354e822e1f"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Small Visualization", "Section",
+ CellChangeTimes->{{3.802033478199768*^9, 
+  3.802033482352845*^9}},ExpressionUUID->"009487de-739b-424b-aa32-\
+9f32d6ddbcad"],
+
+Cell["\<\
+We can inspect the boundary of a specified color-difference in the ab-plane. \
+This demonstrates the correction that is done in the blue regions.\
+\>", "Text",
+ CellChangeTimes->{{3.802033484961525*^9, 
+  3.802033563970681*^9}},ExpressionUUID->"42896385-337d-4e0b-9be9-\
+b712614891a0"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"bg", "=", 
+   RowBox[{"RegionPlot", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"a", "^", "2"}], "+", 
+       RowBox[{"b", "^", "2"}]}], "\[LessEqual]", "1"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"a", ",", 
+       RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"b", ",", 
+       RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", 
+     RowBox[{"ColorFunction", "\[Rule]", 
+      RowBox[{"Function", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"x", ",", "y"}], "}"}], ",", 
+        RowBox[{"LABColor", "[", 
+         RowBox[{".5", ",", "x", ",", "y"}], "]"}]}], "]"}]}], ",", 
+     RowBox[{"ColorFunctionScaling", "\[Rule]", "False"}], ",", 
+     RowBox[{"BoundaryStyle", "\[Rule]", "None"}], ",", 
+     RowBox[{"Background", "\[Rule]", 
+      RowBox[{"LABColor", "[", 
+       RowBox[{".5", ",", "0", ",", "0"}], "]"}]}], ",", 
+     RowBox[{"Axes", "\[Rule]", "False"}], ",", 
+     RowBox[{"Frame", "\[Rule]", "False"}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Manipulate", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"Show", "[", "\[IndentingNewLine]", 
+    RowBox[{"bg", ",", "\[IndentingNewLine]", 
+     RowBox[{"ContourPlot", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"\[CapitalDelta]E00", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"50", ",", 
+            RowBox[{
+             RowBox[{"pos", "[", 
+              RowBox[{"[", "1", "]"}], "]"}], "*", "100"}], ",", 
+            RowBox[{
+             RowBox[{"pos", "[", 
+              RowBox[{"[", "2", "]"}], "]"}], "*", "100"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"50", ",", 
+            RowBox[{"a", "*", "100.0"}], ",", 
+            RowBox[{"b", "*", "100.0"}]}], "}"}]}], "]"}], "\[Equal]", 
+        "dist"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"a", ",", 
+         RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"b", ",", 
+         RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"ContourStyle", "\[Rule]", "White"}], ",", 
+       RowBox[{"PlotPoints", "\[Rule]", 
+        RowBox[{"ControlActive", "[", 
+         RowBox[{"20", ",", "30"}], "]"}]}], ",", 
+       RowBox[{"MaxRecursion", "\[Rule]", 
+        RowBox[{"ControlActive", "[", 
+         RowBox[{"2", ",", "4"}], "]"}]}]}], "]"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"ImageSize", "\[Rule]", "400"}]}], "\[IndentingNewLine]", "]"}], 
+   ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"dist", ",", "4", ",", "\"\<Distance\>\""}], "}"}], ",", "1", 
+     ",", "7"}], "}"}], ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"pos", ",", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"-", ".1"}], ",", 
+         RowBox[{"-", ".6"}]}], "}"}], ",", "\"\<Ref Color\>\""}], "}"}], ",",
+      "Locator"}], "}"}]}], "\[IndentingNewLine]", "]"}]}], "Input",
+ CellChangeTimes->{{3.8020335849597063`*^9, 3.8020336616548*^9}},
+ CellLabel->
+  "In[106]:=",ExpressionUUID->"60645fb6-4906-4e13-9726-c431c4ba5d31"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{$CellContext`dist$$ = 
+    4, $CellContext`pos$$ = {-0.1, -0.6}, Typeset`show$$ = True, 
+    Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
+    Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
+    "\"untitled\"", Typeset`specs$$ = {{{
+       Hold[$CellContext`dist$$], 4, "Distance"}, 1, 7}, {{
+       Hold[$CellContext`pos$$], {-0.1, -0.6}, "Ref Color"}, Automatic}}, 
+    Typeset`size$$ = {400., {198., 202.}}, Typeset`update$$ = 0, 
+    Typeset`initDone$$, Typeset`skipInitDone$$ = True}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, 
+      "Variables" :> {$CellContext`dist$$ = 
+        4, $CellContext`pos$$ = {-0.1, -0.6}}, "ControllerVariables" :> {}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, "Body" :> Show[$CellContext`bg, 
+        ContourPlot[$CellContext`\[CapitalDelta]E00[{
+           50, Part[$CellContext`pos$$, 1] 100, Part[$CellContext`pos$$, 2] 
+            100}, {50, $CellContext`a 100., $CellContext`b 
+            100.}] == $CellContext`dist$$, {$CellContext`a, -1, 
+          1}, {$CellContext`b, -1, 1}, ContourStyle -> White, PlotPoints -> 
+         ControlActive[20, 30], MaxRecursion -> ControlActive[2, 4]], 
+        ImageSize -> 400], 
+      "Specifications" :> {{{$CellContext`dist$$, 4, "Distance"}, 1, 
+         7}, {{$CellContext`pos$$, {-0.1, -0.6}, "Ref Color"}, Automatic, 
+         ControlType -> Locator}}, "Options" :> {}, "DefaultOptions" :> {}],
+     ImageSizeCache->{453., {245.1875, 250.8125}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{{3.802033623265667*^9, 3.802033662040854*^9}},
+ CellLabel->
+  "Out[107]=",ExpressionUUID->"0a399052-673d-4ee7-afcc-75c04b15b5cf"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Implementation", "Section",
+ CellChangeTimes->{{3.802030761780808*^9, 
+  3.802030763340901*^9}},ExpressionUUID->"cc93b363-082f-44d3-bd6d-\
+b7912983fb11"],
+
+Cell["\<\
+The following symbolic implementation uses exact numbers everywhere which \
+means you can use symbols or exact numbers as arguments to get infinitely \
+precise results.\
+\>", "Text",
+ CellChangeTimes->{{3.802030771639287*^9, 3.802030834163041*^9}, {
+  3.802030877947822*^9, 
+  3.802030886536626*^9}},ExpressionUUID->"958887d1-57a7-4f60-8dc0-\
+ff4b95d413c4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"\[CapitalDelta]E00Symbolic", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"L1s_", ",", "a1s_", ",", "b1s_"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"L2s_", ",", "a2s_", ",", "b2s_"}], "}"}]}], "]"}], ":=", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"kL", "=", "1"}], ",", 
+      RowBox[{"kC", "=", "1"}], ",", 
+      RowBox[{"kH", "=", "1"}], ",", "\[IndentingNewLine]", "mCs", ",", 
+      "\[IndentingNewLine]", "G", ",", "\[IndentingNewLine]", "a1p", ",", 
+      "a2p", ",", "\[IndentingNewLine]", "C1p", ",", "C2p", ",", 
+      "\[IndentingNewLine]", "h1p", ",", "h2p", ",", "\[IndentingNewLine]", 
+      "\[CapitalDelta]Lp", ",", "\[IndentingNewLine]", "\[CapitalDelta]Cp", 
+      ",", "\[IndentingNewLine]", "\[CapitalDelta]hp", ",", "mhp", ",", 
+      "\[IndentingNewLine]", "\[CapitalDelta]Hp", ",", "\[IndentingNewLine]", 
+      "mLp", ",", "\[IndentingNewLine]", "mCp", ",", "\[IndentingNewLine]", 
+      "T", ",", "\[IndentingNewLine]", "\[CapitalDelta]\[Theta]", ",", "RC", 
+      ",", "SL", ",", "SC", ",", "SH", ",", "RT", ",", "\[IndentingNewLine]", 
+      "\[CapitalDelta]E00", ",", "\[IndentingNewLine]", 
+      RowBox[{"toAngle", "=", 
+       RowBox[{"Function", "[", 
+        RowBox[{"arg", ",", 
+         RowBox[{
+          RowBox[{"arg", "/", 
+           RowBox[{"(", 
+            RowBox[{"2", "Pi"}], ")"}]}], "*", "360"}]}], "]"}]}]}], 
+     "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"mCs", "=", 
+      RowBox[{"Mean", "[", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"a1s", "^", "2"}], "+", 
+           RowBox[{"b1s", "^", "2"}]}], "]"}], ",", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"a2s", "^", "2"}], "+", 
+           RowBox[{"b2s", "^", "2"}]}], "]"}]}], "}"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"G", "=", 
+      RowBox[{
+       RowBox[{"1", "/", "2"}], 
+       RowBox[{"(", 
+        RowBox[{"1", "-", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"mCs", "^", "7"}], "/", 
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"mCs", "^", "7"}], "+", 
+             RowBox[{"25", "^", "7"}]}], ")"}]}], "]"}]}], ")"}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"a1p", ",", "a2p"}], "}"}], "=", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"1", "+", "G"}], ")"}], "*", 
+       RowBox[{"{", 
+        RowBox[{"a1s", ",", "a2s"}], "}"}]}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"C1p", ",", "C2p"}], "}"}], "=", 
+      RowBox[{"Sqrt", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"a1p", ",", "a2p"}], "}"}], "^", "2"}], "+", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"b1s", ",", "b2s"}], "}"}], "^", "2"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"h1p", ",", "h2p"}], "}"}], "=", 
+      RowBox[{
+       RowBox[{"Function", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"a", ",", "b"}], "}"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"Piecewise", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{"Mod", "[", 
+               RowBox[{
+                RowBox[{"ArcTan", "[", 
+                 RowBox[{"a", ",", "b"}], "]"}], ",", 
+                RowBox[{"2", "Pi"}]}], "]"}], ",", 
+              RowBox[{
+               RowBox[{"a", "\[NotEqual]", "0"}], "||", 
+               RowBox[{"b", "\[NotEqual]", "0"}]}]}], "}"}], "}"}], ",", 
+           "0"}], "]"}]}], "]"}], "@@@", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"a1p", ",", "b1s"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"a2p", ",", "b2s"}], "}"}]}], "}"}]}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalDelta]Lp", "=", 
+      RowBox[{"L2s", "-", "L1s"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalDelta]Cp", "=", 
+      RowBox[{"C2p", "-", "C1p"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalDelta]hp", "=", 
+      RowBox[{"Piecewise", "[", 
+       RowBox[{
+        RowBox[{"{", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"h2p", "-", "h1p"}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"C1p", "*", "C2p"}], "\[NotEqual]", "0"}], "&&", 
+             RowBox[{
+              RowBox[{"Abs", "[", 
+               RowBox[{"h1p", "-", "h2p"}], "]"}], "\[LessEqual]", "Pi"}]}]}],
+            "}"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"h2p", "-", "h1p", "-", 
+             RowBox[{"2", "Pi"}]}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"C1p", "*", "C2p"}], "\[NotEqual]", "0"}], "&&", 
+             RowBox[{
+              RowBox[{"h2p", "-", "h1p"}], ">", "Pi"}]}]}], "}"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"h2p", "-", "h1p", "+", 
+             RowBox[{"2", "Pi"}]}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"C1p", "*", "C2p"}], "\[NotEqual]", "0"}], "&&", 
+             RowBox[{
+              RowBox[{"h2p", "-", "h1p"}], "<", 
+              RowBox[{"-", "Pi"}]}]}]}], "}"}]}], "}"}], ",", "0"}], "]"}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalDelta]Hp", "=", 
+      RowBox[{"2", "*", 
+       RowBox[{"Sqrt", "[", 
+        RowBox[{"C1p", "*", "C2p"}], "]"}], "*", 
+       RowBox[{"Sin", "[", 
+        RowBox[{"\[CapitalDelta]hp", "/", "2"}], "]"}]}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"mLp", "=", 
+      RowBox[{"Mean", "[", 
+       RowBox[{"{", 
+        RowBox[{"L1s", ",", "L2s"}], "}"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"mCp", "=", 
+      RowBox[{"Mean", "[", 
+       RowBox[{"{", 
+        RowBox[{"C1p", ",", "C2p"}], "}"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"mhp", "=", 
+      RowBox[{"Piecewise", "[", 
+       RowBox[{
+        RowBox[{"{", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"h1p", "+", "h2p"}], ")"}], "/", "2"}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"C1p", "*", "C2p"}], "\[NotEqual]", "0"}], "&&", 
+             RowBox[{
+              RowBox[{"Abs", "[", 
+               RowBox[{"h1p", "-", "h2p"}], "]"}], "\[LessEqual]", "Pi"}]}]}],
+            "}"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"h1p", "+", "h2p", "+", 
+               RowBox[{"2", "Pi"}]}], ")"}], "/", "2"}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"C1p", "*", "C2p"}], "\[NotEqual]", "0"}], "&&", 
+             RowBox[{
+              RowBox[{"Abs", "[", 
+               RowBox[{"h1p", "-", "h2p"}], "]"}], ">", "Pi"}], "&&", 
+             RowBox[{
+              RowBox[{"h1p", "+", "h2p"}], "<", 
+              RowBox[{"2", "Pi"}]}]}]}], "}"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"h1p", "+", "h2p", "-", 
+               RowBox[{"2", "Pi"}]}], ")"}], "/", "2"}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"C1p", "*", "C2p"}], "\[NotEqual]", "0"}], "&&", 
+             RowBox[{
+              RowBox[{"Abs", "[", 
+               RowBox[{"h1p", "-", "h2p"}], "]"}], ">", "Pi"}], "&&", 
+             RowBox[{
+              RowBox[{"h1p", "+", "h2p"}], "\[GreaterEqual]", 
+              RowBox[{"2", "Pi"}]}]}]}], "}"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"h1p", "+", "h2p"}], ",", " ", 
+            RowBox[{
+             RowBox[{"C1p", "*", "C2p"}], "==", "0"}]}], "}"}]}], 
+         "\[IndentingNewLine]", "}"}], ",", "0"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"T", "=", 
+      RowBox[{"1", "-", 
+       RowBox[{
+        RowBox[{"17", "/", "100"}], "*", 
+        RowBox[{"Cos", "[", 
+         RowBox[{"mhp", "-", 
+          RowBox[{"Pi", "/", "6"}]}], "]"}]}], "+", 
+       RowBox[{
+        RowBox[{"24", "/", "100"}], "*", 
+        RowBox[{"Cos", "[", 
+         RowBox[{"2", "*", "mhp"}], "]"}]}], "+", 
+       RowBox[{
+        RowBox[{"32", "/", "100"}], "*", 
+        RowBox[{"Cos", "[", 
+         RowBox[{
+          RowBox[{"3", "*", "mhp"}], "+", 
+          RowBox[{"Pi", "/", "30"}]}], "]"}]}], "-", 
+       RowBox[{
+        RowBox[{"20", "/", "100"}], "*", 
+        RowBox[{"Cos", "[", 
+         RowBox[{
+          RowBox[{"4", "*", "mhp"}], "-", 
+          RowBox[{"7", 
+           RowBox[{"Pi", "/", "20"}]}]}], "]"}]}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalDelta]\[Theta]", "=", 
+      RowBox[{
+       RowBox[{"Pi", "/", "6"}], "*", 
+       RowBox[{"Exp", "[", 
+        RowBox[{"-", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"mhp", "/", 
+                RowBox[{"(", 
+                 RowBox[{"2", "Pi"}], ")"}]}], "*", "360"}], "-", "275"}], 
+             ")"}], "/", "25"}], ")"}], "^", "2"}]}], "]"}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"RC", "=", 
+      RowBox[{"2", "*", 
+       RowBox[{"Sqrt", "[", 
+        RowBox[{
+         RowBox[{"mCp", "^", "7"}], "/", 
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{"mCp", "^", "7"}], "+", 
+           RowBox[{"25", "^", "7"}]}], ")"}]}], "]"}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"SL", "=", 
+      RowBox[{"1", "+", 
+       RowBox[{
+        RowBox[{"15", "/", "1000"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"mLp", "-", "50"}], ")"}], "^", "2"}], "/", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{"20", "+", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"mLp", "-", "50"}], ")"}], "^", "2"}]}], "]"}]}]}]}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"SC", "=", 
+      RowBox[{"1", "+", 
+       RowBox[{
+        RowBox[{"45", "/", "1000"}], "*", "mCp"}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"SH", "=", 
+      RowBox[{"1", "+", 
+       RowBox[{
+        RowBox[{"15", "/", "1000"}], "*", "mCp", "*", "T"}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"RT", "=", 
+      RowBox[{
+       RowBox[{"-", 
+        RowBox[{"Sin", "[", 
+         RowBox[{"2", "\[CapitalDelta]\[Theta]"}], "]"}]}], "*", "RC"}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalDelta]E00", "=", 
+      RowBox[{"Sqrt", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"\[CapitalDelta]Lp", "/", 
+           RowBox[{"(", 
+            RowBox[{"kL", "*", "SL"}], ")"}]}], ")"}], "^", "2"}], "+", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"\[CapitalDelta]Cp", "/", 
+           RowBox[{"(", 
+            RowBox[{"kC", "*", "SC"}], ")"}]}], ")"}], "^", "2"}], "+", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"\[CapitalDelta]Hp", "/", 
+           RowBox[{"(", 
+            RowBox[{"kH", "*", "SH"}], ")"}]}], ")"}], "^", "2"}], "+", 
+        RowBox[{"RT", "*", 
+         RowBox[{"\[CapitalDelta]Cp", "/", 
+          RowBox[{"(", 
+           RowBox[{"kC", "*", "SC"}], ")"}]}], "*", 
+         RowBox[{"\[CapitalDelta]Hp", "/", 
+          RowBox[{"(", 
+           RowBox[{"kH", "*", "SH"}], ")"}]}]}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Association", "[", 
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"\"\<G\>\"", "\[Rule]", "G"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<C1'\>\"", "\[Rule]", "C1p"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<C2'\>\"", "\[Rule]", "C2p"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<h1'\>\"", "\[Rule]", 
+         RowBox[{"toAngle", "[", "h1p", "]"}]}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<h2'\>\"", "\[Rule]", 
+         RowBox[{"toAngle", "[", "h2p", "]"}]}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<dh'\>\"", "\[Rule]", 
+         RowBox[{"toAngle", "[", "\[CapitalDelta]hp", "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<dL'\>\"", "\[Rule]", "\[CapitalDelta]Lp"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<dC'\>\"", "\[Rule]", "\[CapitalDelta]Cp"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<dH'\>\"", "\[Rule]", 
+         RowBox[{"toAngle", "[", "\[CapitalDelta]Hp", "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<L'_ave\>\"", "\[Rule]", "mLp"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<C'_ave\>\"", "\[Rule]", "mCp"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<h'_ave\>\"", "\[Rule]", 
+         RowBox[{"toAngle", "[", "mhp", "]"}]}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<S_L\>\"", "\[Rule]", "SL"}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{"\"\<S_C\>\"", "\[Rule]", "SC"}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{"\"\<T\>\"", "\[Rule]", "T"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<S_H\>\"", "\[Rule]", "SH"}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{"\"\<dTheta\>\"", "\[Rule]", "\[CapitalDelta]\[Theta]"}], ",",
+         "\[IndentingNewLine]", 
+        RowBox[{"\"\<R_C\>\"", "\[Rule]", "RC"}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{"\"\<R_T\>\"", "\[Rule]", "RT"}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{"\"\<dE2000\>\"", "\[Rule]", "\[CapitalDelta]E00"}]}], 
+       "\[IndentingNewLine]", "}"}], "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ InitializationCell->True,
+ CellChangeTimes->CompressedData["
+1:eJwd0G0o3HEAB/D/jmb8FTohcTMPeRiXZJIXjJFzL+RxabXLQ0p00ckpWd0b
+89jVut28mBdHGLrm5FKu5PqzKw9tMY65cM7943RtGm5kY7/v78W3z4vv99X3
+SW1zWb2AYZh4EtjJx9V8L3Hn2kWJb+F18N9e+OZ6ZwBO/O5/B6Xa6A8wwyYb
+gkx8/ycotBim4eLUhRHW1rFfYKonmbqrEh7Akc0R6knSohNmZ7/g4b+z2F/w
+vJunao99b2DD4dItNJkLHmwRNYU+AvhYGvoQWrP+iKB+l4uBnNS7FL5qa3oJ
+3+s/NsHPWx1qGMkfDULd2P0UPHUNm6DSOmiGo3cBy1Dg8VqDmZxjA8rUFjvt
+5wxHUKWcvYKKvmIPvLxRJGwT68I4avjkXgrsyJsUw8rnfvM7RD/ruBna0nQK
+Z5k7t29A1Aob8wrtPDEk4wc1wq08hVZHhQu+/hmXeEJcntBSW6K5q5Vy8o9R
+54GNC457OLS0yqwS7eszj2DgjIaF7SlFYugrt2XB82dzOVSzJh+m5xwWwV75
+nQyqxXIV3O/pouol/kYoqo5doLtvpq+w6ukxVWLwZteIwUFRAbBakeCCmc55
+Krsxy64TS20Sf/gfI9Zbgw==
+  "],
+ CellLabel->"In[51]:=",ExpressionUUID->"7a48ecfd-ed57-4f85-8059-ccc1cbd55be1"],
+
+Cell["\<\
+This fast, compiled version uses machine precision numbers. You need to have \
+a C compiler installed or edit out the CompilationTarget option.\
+\>", "Text",
+ CellChangeTimes->{{3.802030907564542*^9, 3.802030930190909*^9}, {
+  3.802030984824767*^9, 
+  3.802031010018762*^9}},ExpressionUUID->"8e2cb35e-cd00-4141-a599-\
+000cf33c99f1"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"\[CapitalDelta]E00", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"L1_", "?", "NumericQ"}], ",", 
+       RowBox[{"a1_", "?", "NumericQ"}], ",", 
+       RowBox[{"b1_", "?", "NumericQ"}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"L2_", "?", "NumericQ"}], ",", 
+       RowBox[{"a2_", "?", "NumericQ"}], ",", 
+       RowBox[{"b2_", "?", "NumericQ"}]}], "}"}]}], "]"}], ":=", 
+   RowBox[{"de00C", "[", 
+    RowBox[{"L1", ",", "a1", ",", "b1", ",", "L2", ",", "a2", ",", "b2"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"\[CapitalDelta]E00C", "=", 
+   RowBox[{"Compile", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"Lstd", ",", "_Real", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"astd", ",", "_Real", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"bstd", ",", "_Real", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"Lsample", ",", "_Real", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"asample", ",", "_Real", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"bsample", ",", "_Real", ",", "0"}], "}"}]}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Module", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"kl", "=", "1"}], ",", 
+         RowBox[{"kc", "=", "1"}], ",", 
+         RowBox[{"kh", "=", "1"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"Cabstd", "=", 
+          RowBox[{"Sqrt", "[", 
+           RowBox[{
+            RowBox[{"astd", "^", "2"}], "+", 
+            RowBox[{"bstd", "^", "2"}]}], "]"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{"Cabsample", "=", 
+          RowBox[{"Sqrt", "[", 
+           RowBox[{
+            RowBox[{"asample", "^", "2"}], "+", 
+            RowBox[{"bsample", "^", "2"}]}], "]"}]}], ",", 
+         "\[IndentingNewLine]", "Cabarithmean", ",", "G", ",", 
+         "\[IndentingNewLine]", "apstd", ",", "apsample", ",", "Cpsample", 
+         ",", "Cpstd", ",", "hpstd", ",", "\[IndentingNewLine]", "hpsample", 
+         ",", "dL", ",", "dC", ",", "dhp", ",", "\[IndentingNewLine]", 
+         "Cpprod", ",", "zcidx", ",", "dH", ",", "Lp", ",", "Cp", ",", "hp", 
+         ",", "Lpm502", ",", "Sl", ",", "Sc", ",", "\[IndentingNewLine]", "T",
+          ",", "Sh", ",", "Rc", ",", "delthetarad", ",", "RT", ",", 
+         "\[IndentingNewLine]", "klSl", ",", "kcSc", ",", "khSh", ",", 
+         "de00"}], "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Cabarithmean", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"Cabstd", "+", "Cabsample"}], ")"}], "/", "2"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"G", "=", 
+         RowBox[{"0.5", "*", 
+          RowBox[{"(", 
+           RowBox[{"1", "-", 
+            RowBox[{"Sqrt", "[", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"Cabarithmean", "^", "7"}], ")"}], "/", 
+              RowBox[{"(", 
+               RowBox[{
+                RowBox[{"Cabarithmean", "^", "7"}], "+", 
+                RowBox[{"25", "^", "7"}]}], ")"}]}], "]"}]}], ")"}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"apstd", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"1", "+", "G"}], ")"}], "*", "astd"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"apsample", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"1", "+", "G"}], ")"}], "*", "asample"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Cpsample", "=", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"apsample", "^", "2"}], "+", 
+           RowBox[{"bsample", "^", "2"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Cpstd", "=", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"apstd", "^", "2"}], "+", 
+           RowBox[{"bstd", "^", "2"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Cpprod", "=", 
+         RowBox[{"(", 
+          RowBox[{"Cpsample", "*", "Cpstd"}], ")"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"zcidx", "=", 
+         RowBox[{"Boole", "[", 
+          RowBox[{"Cpprod", "\[Equal]", "0"}], "]"}]}], ";", 
+        "\[IndentingNewLine]", "\[IndentingNewLine]", 
+        RowBox[{"hpstd", "=", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{"TrueQ", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"Abs", "[", "apstd", "]"}], "+", 
+              RowBox[{"Abs", "[", "bstd", "]"}]}], "\[Equal]", "0"}], "]"}], 
+           ",", "0.0", ",", 
+           RowBox[{"ArcTan", "[", 
+            RowBox[{"apstd", ",", "bstd"}], "]"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"hpstd", "=", 
+         RowBox[{"hpstd", "+", 
+          RowBox[{"2", "*", "Pi", "*", 
+           RowBox[{"Boole", "[", 
+            RowBox[{"hpstd", "<", "0"}], "]"}]}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"TrueQ", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"Abs", "[", "apstd", "]"}], "+", 
+             RowBox[{"Abs", "[", "bstd", "]"}]}], "\[Equal]", "0"}], "]"}], 
+          ",", 
+          RowBox[{"hpstd", "=", "0"}]}], "]"}], ";", "\[IndentingNewLine]", 
+        RowBox[{"hpsample", "=", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{"TrueQ", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"Abs", "[", "apsample", "]"}], "+", 
+              RowBox[{"Abs", "[", "bsample", "]"}]}], "\[Equal]", "0"}], 
+            "]"}], ",", "0.0", ",", 
+           RowBox[{"ArcTan", "[", 
+            RowBox[{"apsample", ",", "bsample"}], "]"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"hpsample", "=", 
+         RowBox[{"hpsample", "+", 
+          RowBox[{"2", "*", "Pi", "*", 
+           RowBox[{"Boole", "[", 
+            RowBox[{"hpsample", "<", "0"}], "]"}]}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"TrueQ", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"Abs", "[", "apsample", "]"}], "+", 
+             RowBox[{"Abs", "[", "bsample", "]"}]}], "\[Equal]", "0"}], "]"}],
+           ",", 
+          RowBox[{"hpsample", "=", "0"}]}], "]"}], ";", "\[IndentingNewLine]",
+         "\[IndentingNewLine]", 
+        RowBox[{"dL", "=", 
+         RowBox[{"(", 
+          RowBox[{"Lsample", "-", "Lstd"}], ")"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"dC", "=", 
+         RowBox[{"(", 
+          RowBox[{"Cpsample", "-", "Cpstd"}], ")"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"dhp", "=", 
+         RowBox[{"(", 
+          RowBox[{"hpsample", "-", "hpstd"}], ")"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"dhp", "=", 
+         RowBox[{"dhp", "-", 
+          RowBox[{"2", "*", "Pi", "*", 
+           RowBox[{"Boole", "[", 
+            RowBox[{"dhp", ">", "Pi"}], "]"}]}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"dhp", "=", 
+         RowBox[{"dhp", "+", 
+          RowBox[{"2", "*", "Pi", "*", 
+           RowBox[{"Boole", "[", 
+            RowBox[{"dhp", "<", 
+             RowBox[{"(", 
+              RowBox[{"-", "Pi"}], ")"}]}], "]"}]}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"zcidx", "\[Equal]", "2"}], ",", 
+          RowBox[{"dhp", "=", "0"}]}], "]"}], ";", "\[IndentingNewLine]", 
+        "\[IndentingNewLine]", 
+        RowBox[{"dH", "=", 
+         RowBox[{"2", "*", 
+          RowBox[{"Sqrt", "[", "Cpprod", "]"}], "*", 
+          RowBox[{"Sin", "[", 
+           RowBox[{"dhp", "/", "2"}], "]"}]}]}], ";", "\[IndentingNewLine]", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Lp", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"Lsample", "+", "Lstd"}], ")"}], "/", "2"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Cp", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"Cpstd", "+", "Cpsample"}], ")"}], "/", "2"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"hp", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"hpstd", "+", "hpsample"}], ")"}], "/", "2"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"hp", "=", 
+         RowBox[{"hp", "-", 
+          RowBox[{
+           RowBox[{"Boole", "[", 
+            RowBox[{
+             RowBox[{"Abs", "[", 
+              RowBox[{"hpstd", "-", "hpsample"}], "]"}], ">", "Pi"}], "]"}], 
+           "*", "Pi"}]}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"hp", "=", 
+         RowBox[{"hp", "+", 
+          RowBox[{
+           RowBox[{"Boole", "[", 
+            RowBox[{"hp", "<", "0"}], "]"}], "*", "2", "*", "Pi"}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"zcidx", "\[Equal]", "1"}], ",", 
+          RowBox[{"hp", "=", 
+           RowBox[{"hpsample", "+", "hpstd"}]}]}], "]"}], ";", 
+        "\[IndentingNewLine]", "\[IndentingNewLine]", 
+        RowBox[{"Lpm502", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"Lp", "-", "50"}], ")"}], "^", "2"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Sl", "=", 
+         RowBox[{"1", "+", 
+          RowBox[{"0.015", "*", 
+           RowBox[{"Lpm502", "/", 
+            RowBox[{"Sqrt", "[", 
+             RowBox[{"20", "+", "Lpm502"}], "]"}]}]}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Sc", "=", 
+         RowBox[{"1", "+", 
+          RowBox[{"0.045", "*", "Cp"}]}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"T", "=", 
+         RowBox[{"1", "-", 
+          RowBox[{"0.17", "*", 
+           RowBox[{"Cos", "[", 
+            RowBox[{"hp", "-", 
+             RowBox[{"Pi", "/", "6"}]}], "]"}]}], "+", 
+          RowBox[{"0.24", "*", 
+           RowBox[{"Cos", "[", 
+            RowBox[{"2", "*", "hp"}], "]"}]}], "+", 
+          RowBox[{"0.32", "*", 
+           RowBox[{"Cos", "[", 
+            RowBox[{
+             RowBox[{"3", "*", "hp"}], "+", 
+             RowBox[{"Pi", "/", "30"}]}], "]"}]}], "-", 
+          RowBox[{"0.20", "*", 
+           RowBox[{"Cos", "[", 
+            RowBox[{
+             RowBox[{"4", "*", "hp"}], "-", 
+             RowBox[{"63", "*", 
+              RowBox[{"Pi", "/", "180"}]}]}], "]"}]}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Sh", "=", 
+         RowBox[{"1", "+", 
+          RowBox[{"0.015", "*", "Cp", "*", "T"}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"delthetarad", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"30", "*", 
+            RowBox[{"Pi", "/", "180"}]}], ")"}], "*", 
+          RowBox[{"Exp", "[", 
+           RowBox[{"-", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"(", 
+                RowBox[{
+                 RowBox[{
+                  RowBox[{"180", "/", "Pi"}], "*", "hp"}], "-", "275"}], 
+                ")"}], "/", "25"}], ")"}], "^", "2"}]}], "]"}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Rc", "=", 
+         RowBox[{"2", "*", 
+          RowBox[{"Sqrt", "[", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"Cp", "^", "7"}], ")"}], "/", 
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"Cp", "^", "7"}], "+", 
+              RowBox[{"25", "^", "7"}]}], ")"}]}], "]"}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"RT", "=", 
+         RowBox[{
+          RowBox[{"-", 
+           RowBox[{"Sin", "[", 
+            RowBox[{"2", "*", "delthetarad"}], "]"}]}], "*", "Rc"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"klSl", "=", 
+         RowBox[{"kl", "*", "Sl"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"kcSc", "=", 
+         RowBox[{"kc", "*", "Sc"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"khSh", "=", 
+         RowBox[{"kh", "*", "Sh"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"Sqrt", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"dL", "/", "klSl"}], ")"}], "^", "2"}], "+", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"dC", "/", "kcSc"}], ")"}], "^", "2"}], "+", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"dH", "/", "khSh"}], ")"}], "^", "2"}], "+", 
+          RowBox[{"RT", "*", 
+           RowBox[{"(", 
+            RowBox[{"dC", "/", "kcSc"}], ")"}], "*", 
+           RowBox[{"(", 
+            RowBox[{"dH", "/", "khSh"}], ")"}]}]}], "]"}]}]}], 
+      "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"CompilationTarget", "\[Rule]", "\"\<C\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"RuntimeOptions", "\[Rule]", "\"\<Speed\>\""}]}], 
+    "\[IndentingNewLine]", "]"}]}], ";"}]}], "Input",
+ InitializationCell->True,
+ CellChangeTimes->{{3.8004819556810102`*^9, 3.800482055882635*^9}, {
+   3.802029924218392*^9, 3.802029945452194*^9}, 3.8020309023184137`*^9, 
+   3.8020309802316227`*^9},
+ CellLabel->"In[54]:=",ExpressionUUID->"78539a89-2061-414c-86b4-50bfd4644d2b"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1152.75, 791.25},
+WindowMargins->{{Automatic, -1583.25}, {5.25, Automatic}},
+FrontEndVersion->"12.1 for Linux x86 (64-bit) (June 19, 2020)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"ef12cadb-ab6a-44f8-9838-187350596297"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 173, 3, 98, "Title",ExpressionUUID->"e50129c5-2fcb-4281-9487-2278eb564662"],
+Cell[756, 27, 1267, 23, 104, "Text",ExpressionUUID->"7a6beb32-0b4f-4c74-93f7-07058cbaac2a"],
+Cell[2026, 52, 394, 10, 35, "Text",ExpressionUUID->"74615274-5679-4572-a094-7be1bdb34075"],
+Cell[2423, 64, 281, 7, 29, "Input",ExpressionUUID->"3fe7c262-4a82-4a9e-b49b-0b5efd1da617"],
+Cell[2707, 73, 974, 21, 81, "Text",ExpressionUUID->"37f9d4da-58f7-4da1-a3d3-deb7bdafa6c0"],
+Cell[CellGroupData[{
+Cell[3706, 98, 513, 11, 29, "Input",ExpressionUUID->"17c2e192-cfb2-48fa-92e5-4e33421fecea"],
+Cell[4222, 111, 93444, 1928, 555, "Output",ExpressionUUID->"aae2b217-4ef8-486e-9358-94f2be065b44"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[97703, 2044, 237, 4, 68, "Section",ExpressionUUID->"95e40d7b-343c-45b4-ac56-ce476e35c4fa"],
+Cell[97943, 2050, 360, 7, 58, "Text",ExpressionUUID->"f59dfdc0-4dcf-4a64-a1ed-9cd5baf8ea0f"],
+Cell[98306, 2059, 1336, 36, 92, "Input",ExpressionUUID->"beafeeb0-d321-4b7f-8888-73ed4c1b4e66"],
+Cell[CellGroupData[{
+Cell[99667, 2099, 404, 9, 29, "Input",ExpressionUUID->"8f9ff261-62df-4c02-80c3-ad24fd5227ff"],
+Cell[100074, 2110, 1459, 24, 99, "Output",ExpressionUUID->"11acc64f-f9f8-4917-8314-2df200b277d3"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[101570, 2139, 203, 3, 29, "Input",ExpressionUUID->"900fa746-a3d5-4135-845a-ebe7b9d58dc4"],
+Cell[101776, 2144, 173, 2, 33, "Output",ExpressionUUID->"01108f95-130d-41b4-aeb4-1bf2313c22cd"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[101986, 2151, 957, 21, 29, "Input",ExpressionUUID->"84c88972-cf28-43ca-9373-cbfd92eb473d"],
+Cell[102946, 2174, 1554, 25, 99, "Output",ExpressionUUID->"9fcf0ebc-84fb-47c5-80ad-0608893edab3"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[104537, 2204, 205, 3, 29, "Input",ExpressionUUID->"5527a038-0c29-4e03-b289-72a64e301627"],
+Cell[104745, 2209, 222, 3, 33, "Output",ExpressionUUID->"975ca451-d036-4c0c-ad9a-03354e822e1f"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[105016, 2218, 164, 3, 68, "Section",ExpressionUUID->"009487de-739b-424b-aa32-9f32d6ddbcad"],
+Cell[105183, 2223, 295, 6, 35, "Text",ExpressionUUID->"42896385-337d-4e0b-9be9-b712614891a0"],
+Cell[CellGroupData[{
+Cell[105503, 2233, 3175, 84, 257, "Input",ExpressionUUID->"60645fb6-4906-4e13-9726-c431c4ba5d31"],
+Cell[108681, 2319, 2314, 44, 515, "Output",ExpressionUUID->"0a399052-673d-4ee7-afcc-75c04b15b5cf"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[111044, 2369, 159, 3, 68, "Section",ExpressionUUID->"cc93b363-082f-44d3-bd6d-b7912983fb11"],
+Cell[111206, 2374, 367, 8, 58, "Text",ExpressionUUID->"958887d1-57a7-4f60-8dc0-ff4b95d413c4"],
+Cell[111576, 2384, 14860, 383, 1552, "Input",ExpressionUUID->"7a48ecfd-ed57-4f85-8059-ccc1cbd55be1",
+ InitializationCell->True],
+Cell[126439, 2769, 342, 7, 35, "Text",ExpressionUUID->"8e2cb35e-cd00-4141-a599-000cf33c99f1"],
+Cell[126784, 2778, 13291, 343, 1338, "Input",ExpressionUUID->"78539a89-2061-414c-86b4-50bfd4644d2b",
+ InitializationCell->True]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
