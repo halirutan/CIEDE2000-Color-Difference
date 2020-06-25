@@ -1,7 +1,7 @@
 # CIEDE2000-Color-Difference
 
 This repository provides an implementation of the [CIEDE2000 Color-Difference formula](http://www2.ece.rochester.edu/~gsharma/ciede2000/) (de00) for Mathematica, C# and Excel.
-Its purpose is to calculate colors in the ab-place of the Lab color space that have a defined color-disance when L is fixed.
+Its purpose is to calculate colors in the ab-plane of the Lab color space that have a defined color-disance when L is fixed.
 
 ![Screenshot](screenshot.png)
 
