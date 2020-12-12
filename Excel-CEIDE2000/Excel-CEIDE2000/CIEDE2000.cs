@@ -1,5 +1,4 @@
-﻿using CenterSpace.NMath.Core;
-using System;
+﻿using System;
 using ExcelDna.Integration;
 
 namespace Excel_CEIDE2000
@@ -72,11 +71,55 @@ namespace Excel_CEIDE2000
         public double ColorWithDifference(double difference, double angle)
         {
             angle = NormalizeAngle(angle);
-            var finder = new SecantRootFinder();
-            var d = new Func<double, double>((r) => DE00Polar(r, angle) - difference);
-            var res = finder.Find(new OneVariableFunction(d), 0.0, 20.0);
+            var f = new Func<double, double>((r) => DE00Polar(r, angle) - difference);
 
-            return res;
+            var r1 = 0.0;
+            var r2 = 2.0;
+            // Try to find a large enough upper bound
+            for(var i = 0; i < 10; i++)
+            {
+                if (f(r2) < 0)
+                {
+                    r2 *= 2.0;
+                }
+                else break;
+            }
+            // Simple second root finding. Stolen from www.geeksforgeeks.org
+            var eps = 0.0001;
+            double n = 0, xm, x0 = -1.0, c;
+            if (f(r1) * f(r2) < 0)
+            {
+                do
+                {
+
+                    // calculate the intermediate 
+                    // value 
+                    x0 = (r1 * f(r2) - r2 * f(r1))
+                        / (f(r2) - f(r1));
+
+                    // check if x0 is root of 
+                    // equation or not 
+                    c = f(r1) * f(x0);
+
+                    // update the value of interval 
+                    r1 = r2;
+                    r2 = x0;
+
+                    // update number of iteration 
+                    n++;
+
+                    // if x0 is the root of equation  
+                    // then break the loop 
+                    if (c == 0)
+                        break;
+                    xm = (r1 * f(r2) - r2 * f(r1))
+                        / (f(r2) - f(r1));
+
+                    // repeat the loop until  
+                    // the convergence  
+                } while (Math.Abs(xm - x0) >= eps);
+            }
+            return x0;
         }
 
         public double DE00Polar(double radius, double angle)
